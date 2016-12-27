@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.SnapshotArray;
 public class GroupHorizontalInTurn extends Group {
     private float time;
     private int lastIndex;
+    private int length = 0;
 
     public GroupHorizontalInTurn(float time) {
         // 一张背景移动通过config.width的时间
@@ -28,7 +29,7 @@ public class GroupHorizontalInTurn extends Group {
         SnapshotArray<Actor> children = super.getChildren();
         float pastTime = (long) (delta * 1000000000f)
                 % ((long) (time * 1000000000f)) / 1000000000f;
-        float moveDistance = Gdx.graphics.getWidth() * pastTime / time;
+        float moveDistance = length * pastTime / time;
 
         Actor[] actors = children.begin();
         for (int i = 0, n = children.size; i < n; i++) {
@@ -66,5 +67,13 @@ public class GroupHorizontalInTurn extends Group {
         children.end();
 
         lastIndex = super.getChildren().size - 1;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
     }
 }

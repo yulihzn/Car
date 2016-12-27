@@ -1,0 +1,178 @@
+
+bg.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+bg_far01
+  rotate: false
+  xy: 0, 720
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_far02
+  rotate: false
+  xy: 0, 480
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_far03
+  rotate: false
+  xy: 240, 720
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_far04
+  rotate: false
+  xy: 0, 240
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_far05
+  rotate: false
+  xy: 240, 480
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_near01
+  rotate: false
+  xy: 480, 720
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_near02
+  rotate: false
+  xy: 0, 0
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_near03
+  rotate: false
+  xy: 240, 240
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_near04
+  rotate: false
+  xy: 480, 480
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_near05
+  rotate: false
+  xy: 720, 720
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+road01
+  rotate: false
+  xy: 240, 0
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+road02
+  rotate: false
+  xy: 480, 240
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+road03
+  rotate: false
+  xy: 720, 480
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+road04
+  rotate: false
+  xy: 480, 0
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+road05
+  rotate: false
+  xy: 720, 240
+  size: 240, 240
+  orig: 240, 240
+  offset: 0, 0
+  index: -1
+bg_far06
+  rotate: false
+  xy: 720, 0
+  size: 80, 240
+  orig: 80, 240
+  offset: 0, 0
+  index: -1
+bg_near06
+  rotate: false
+  xy: 800, 0
+  size: 80, 240
+  orig: 80, 240
+  offset: 0, 0
+  index: -1
+road06
+  rotate: false
+  xy: 880, 0
+  size: 80, 240
+  orig: 80, 240
+  offset: 0, 0
+  index: -1
+
+bg2.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+sky01
+  rotate: false
+  xy: 0, 160
+  size: 240, 80
+  orig: 240, 80
+  offset: 0, 0
+  index: -1
+sky02
+  rotate: false
+  xy: 0, 80
+  size: 240, 80
+  orig: 240, 80
+  offset: 0, 0
+  index: -1
+sky03
+  rotate: false
+  xy: 240, 160
+  size: 240, 80
+  orig: 240, 80
+  offset: 0, 0
+  index: -1
+sky04
+  rotate: false
+  xy: 0, 0
+  size: 240, 80
+  orig: 240, 80
+  offset: 0, 0
+  index: -1
+sky05
+  rotate: false
+  xy: 240, 80
+  size: 240, 80
+  orig: 240, 80
+  offset: 0, 0
+  index: -1
+sky06
+  rotate: false
+  xy: 240, 0
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
