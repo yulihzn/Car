@@ -1,5 +1,6 @@
 package com.yuri.car.Logic;
 
+import com.badlogic.gdx.math.Vector2;
 import com.yuri.car.model.Vehicle;
 
 /**
@@ -9,11 +10,11 @@ import com.yuri.car.model.Vehicle;
 
 public class VehicleOperator {
     private Vehicle  vehicle;
-    private float sideShift = 1;
     private boolean isSideShifting = false;
     private boolean isForWarding = false;
     private boolean isBacking = false;
     private float time=0;
+    private float timebox = 0;
     public VehicleOperator(Vehicle vehicle) {
         this.vehicle = vehicle;
     }
@@ -25,7 +26,7 @@ public class VehicleOperator {
     }
     public void sideShift(float value){
         isSideShifting = true;
-        sideShift = value;
+        vehicle.setSlidSpeed(value);
     }
     public void forward(float acceleration){
         isForWarding = true;
@@ -43,7 +44,9 @@ public class VehicleOperator {
             //侧移
             if(isSideShifting){
                 isSideShifting =false;
-                vehicle.getRect().y+= sideShift;
+                if(vehicle.getBody()!=null){
+                    vehicle.getBody().setLinearVelocity(new Vector2(vehicle.getSpeed(),vehicle.getSlidSpeed()));
+                }
             }
             //前进后退二选其一
             if(isForWarding){
@@ -52,6 +55,14 @@ public class VehicleOperator {
             }else if(isBacking){
                 isBacking =false;
                 vehicle.setSpeed(vehicle.getSpeed()-vehicle.getAcceleration());
+            }
+        }
+        timebox+=delta;
+        if(timebox>0.1){
+            timebox = 0;
+            vehicle.setSlidSpeed(0);
+            if(vehicle.getBody()!=null){
+                vehicle.getBody().setLinearVelocity(new Vector2(vehicle.getSpeed(),vehicle.getSlidSpeed()));
             }
         }
 

@@ -3,6 +3,7 @@ package com.yuri.car.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.yuri.car.CarGame;
+import com.yuri.car.stage.BottomStage;
 import com.yuri.car.stage.TopStage;
 
 /**
@@ -11,10 +12,13 @@ import com.yuri.car.stage.TopStage;
 
 public class MainScreen extends BaseScreen {
     private TopStage topStage;
+    private BottomStage bottomStage;
     public MainScreen(CarGame carGame) {
         super(carGame);
         topStage = new TopStage(this);
-        Gdx.input.setInputProcessor(topStage);
+        bottomStage = new BottomStage(this);
+        bottomStage.setPlayer(topStage.getPlayer());
+        Gdx.input.setInputProcessor(bottomStage);
     }
 
     @Override
@@ -23,11 +27,14 @@ public class MainScreen extends BaseScreen {
         super.render(delta);
         topStage.act(delta);
         topStage.draw();
+        bottomStage.act(delta);
+        bottomStage.draw();
     }
 
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
         topStage.getViewport().update(width,height,true);
+        bottomStage.getViewport().update(width,height,true);
     }
 }

@@ -22,8 +22,8 @@ public class Car extends Vehicle {
         setSpeed(0);
         setMaxAcceleration(4);
         setMaxSpeed(150);
-        setRect(new Rectangle(0,0,100,30));
         setWeight(200);
+        setSlidSpeed(0);
         operator = new VehicleOperator(this);
     }
 

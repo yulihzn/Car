@@ -1,14 +1,22 @@
 package com.yuri.car.stage;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.EdgeShape;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.joints.FrictionJointDef;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
@@ -20,6 +28,8 @@ import com.yuri.car.CarGame;
 import com.yuri.car.model.Car;
 import com.yuri.car.screen.MainScreen;
 import com.yuri.car.ui.GroupHorizontalInTurn;
+
+import java.util.Iterator;
 
 /**
  * Created by BanditCat on 2016/12/26.
@@ -34,25 +44,30 @@ public class TopStage extends Stage {
     private Texture texture_bg,texture_bg1,texture_road,texture_sky;
     private TextureAtlas carAtlas;
     private TextureAtlas bgAtlas;
-    private int[]carpos={720-240-120,720-240-200,720-240-180,720-240-100};
+    private int[]carpos={720-240-100,720-240-120,720-240-180,720-240-200};
     private int[]carz = {100,101,102,103};
-
-    private Touchpad touchpad;
 
     private Car player;
     private Array<Car> others = new Array<Car>();
 
+    private World world;
+    private Box2DDebugRenderer debugRenderer;
+
     public TopStage(MainScreen mainScreen) {
         this.mainScreen = mainScreen;
+        OrthographicCamera camera = new OrthographicCamera(CarGame.worldWidth, CarGame.worldHeight);
+        camera.position.set(0f, 0f, 0);
+        camera.zoom = 1f;
+        camera.update();
         setViewport(new FitViewport(CarGame.worldWidth,CarGame.worldHeight));
         addBackground();
         addCar();
         Touchpad.TouchpadStyle style = new Touchpad.TouchpadStyle();
         style.knob = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("images/knob.png"))));
         style.background = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("images/joystick.png"))));
-        touchpad = new Touchpad(20,style);
-        touchpad.setBounds(20,20,200,200);
-        addActor(touchpad);
+        world = new World(new Vector2(0, 0), true);
+        debugRenderer = new Box2DDebugRenderer();
+        addBox2d();
 
     }
 
@@ -92,16 +107,16 @@ public class TopStage extends Stage {
         carAtlas = new TextureAtlas(Gdx.files.internal("images/car.pack"));
 
         player = new Car(new VehicleImage(carAtlas.findRegion("car1")));
-        player.setRect(new Rectangle(400,carpos[0],100,30));
+        player.getRect().setPosition(400,carpos[0]);
 
         Car c2 = new Car(new VehicleImage(carAtlas.findRegion("car2")));
-        c2.setRect(new Rectangle(-200,carpos[1],100,30));
+        c2.getRect().setPosition(-200,carpos[1]);
         c2.setSpeed(145);
         Car c3 = new Car(new VehicleImage(carAtlas.findRegion("car3")));
-        c3.setRect(new Rectangle(-200,carpos[2],100,30));
+        c3.getRect().setPosition(-200,carpos[2]);
         c3.setSpeed(140);
         Car c4 = new Car(new VehicleImage(carAtlas.findRegion("car4")));
-        c4.setRect(new Rectangle(-200,carpos[3],100,30));
+        c4.getRect().setPosition(-200,carpos[3]);
         c4.setSpeed(135);
         others.add(c2);
         others.add(c3);
@@ -119,19 +134,90 @@ public class TopStage extends Stage {
 
     }
 
+    private void addBox2dBackground(){
+        BodyDef bd = new BodyDef();
+        bd.position.set(0, 0);
+        Body ground = world.createBody(bd);
+        EdgeShape shape = new EdgeShape();
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape=shape;
+        fixtureDef.restitution=0;
+        fixtureDef.density=0;
+        float offset = 200;
+        shape.set(new Vector2(0-offset, 240), new Vector2(0-offset, 480));
+        ground.createFixture(fixtureDef);
+        shape.set(new Vector2(0-offset, 240), new Vector2(CarGame.worldWidth+offset, 240));
+        ground.createFixture(fixtureDef);
+        shape.set(new Vector2(CarGame.worldWidth+offset, 480), new Vector2(0-offset, 480));
+        ground.createFixture(fixtureDef);
+        shape.set(new Vector2(CarGame.worldWidth+offset, 480), new Vector2(CarGame.worldWidth+offset, 240));
+        ground.createFixture(fixtureDef);
+        shape.dispose();
+    }
+    private Body getCarBox(Car car){
+        if(car.getBody()!=null){
+            world.destroyBody(car.getBody());
+        }
+        BodyDef ballBodyDef = new BodyDef();
+        ballBodyDef.type = BodyDef.BodyType.DynamicBody;
+        ballBodyDef.position.set(car.getRect().x, car.getRect().y);
+        Body body = world.createBody(ballBodyDef);
+        body.setUserData(car);
+        body.setFixedRotation(true);
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(car.getRect().width,car.getRect().height,new Vector2(0,0),0);
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = 1/1000f;
+        fixtureDef.friction = 1f;
+        fixtureDef.restitution = 0.2f;
+        body.createFixture(fixtureDef);
+        shape.dispose();
+        return body;
+    }
+    private void addBox2d(){
+        addBox2dBackground();
+        player.setBody(getCarBox(player));
+        for(Car car:others){
+            car.setBody(getCarBox(car));
+        }
+
+
+    }
+
+    public Car getPlayer() {
+        return player;
+    }
+
+    private void updateBox(){
+        Array<Body> bodies = new Array<Body>();
+        world.getBodies(bodies);
+
+        for (Body b : bodies) {
+            Car e = (Car) b.getUserData();
+            if (e != null && b.isAwake()) {
+                if(!b.isAwake()){
+                    b.getPosition().set(e.getRect().x,e.getRect().y);
+                }else{
+                    e.getRect().setPosition(b.getPosition().x, b.getPosition().y);
+                    e.getImage().setRotation(MathUtils.radiansToDegrees * b.getAngle());
+                }
+            }
+        }
+    }
+
     @Override
     public void act(float delta) {
         changeCarZOrder();
         super.act(delta);
-        joyStickCheck();
         changeSpeed(player.getSpeed());
-        CarMove(others.get(0));
-        CarMove(others.get(1));
-        CarMove(others.get(2));
         player.update(delta);
         for(Car car:others){
+            CarMove(car);
             car.update(delta);
         }
+        getCamera().position.set(player.getRect().x+300,player.getRect().y,0);
+        world.step(1/60f,6,2);
     }
 
     private void changeSpeed(float speed) {
@@ -145,54 +231,21 @@ public class TopStage extends Stage {
         group_road.setLength((int)speed*10);
     }
     private void CarMove(Car car){
-        car.getRect().x = car.getRect().getX()+car.getSpeed()-player.getSpeed();
-        car.getRect().y = car.getRect().getY();
-        if(car.getRect().x>1500||car.getRect().x<-500){
-            car.getRect().x=1500;
+        if(car.getBody() != null){
+            car.getBody().setLinearVelocity(new Vector2(car.getSpeed(),car.getSlidSpeed()));
+            if(car.getBody().getPosition().x>1500||car.getBody().getPosition().x<-500){
+                car.getBody().getPosition().x=MathUtils.random(1)>0?1500:-500;
+            }
         }
     }
 
     private void changeCarZOrder() {
     }
 
-    private void joyStickCheck(){
-        if(touchpad.isTouched()){
-            if(touchpad.getKnobPercentX()>0.5){
-                //right
-                player.getOperator().forward(touchpad.getKnobPercentX());
-            }else if(touchpad.getKnobPercentX()<-0.5){
-                //left
-                player.getOperator().back(-touchpad.getKnobPercentX());
-            }
-            if(touchpad.getKnobPercentY()>0.2){
-                player.getOperator().sideShift(2);
-                //up
-            }else if(touchpad.getKnobPercentY()<-0.2){
-                //down
-                player.getOperator().sideShift(-2);
-            }
-            float yMax = 480-player.getRect().height;
-            float yMin = 240;
-            if(player.getRect().y>yMax){
-                player.getRect().y = yMax;
-            }
-            if(player.getRect().y<yMin){
-                player.getRect().y = yMin;
-            }
-            float xMax = CarGame.worldWidth-player.getRect().width;
-            float xMin = 200;
-            if(player.getRect().x>xMax){
-                player.getRect().x = xMax;
-            }
-            if(player.getRect().x<xMin){
-                player.getRect().x = xMin;
-            }
-        }
-    }
-
     @Override
     public void draw() {
         super.draw();
+        debugRenderer.render(world, getCamera().combined);
     }
 
     @Override
