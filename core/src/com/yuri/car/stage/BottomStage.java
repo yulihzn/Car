@@ -69,7 +69,7 @@ public class BottomStage extends Stage {
                 player.getOperator().forward(touchpad.getKnobPercentX());
             }else if(touchpad.getKnobPercentX()<-0.5){
                 //left
-                player.getOperator().back(-touchpad.getKnobPercentX()/2);
+                player.getOperator().back(-touchpad.getKnobPercentX());
             }
             if(touchpad.getKnobPercentY()>0.2){
                 player.getOperator().sideShift(300);

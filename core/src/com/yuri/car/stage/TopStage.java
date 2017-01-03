@@ -6,17 +6,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.physics.box2d.joints.FrictionJointDef;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
@@ -25,6 +22,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.yuri.car.Actor.VehicleImage;
 import com.yuri.car.CarGame;
+import com.yuri.car.model.Barricade;
 import com.yuri.car.model.Car;
 import com.yuri.car.screen.MainScreen;
 import com.yuri.car.ui.GroupHorizontalInTurn;
@@ -41,7 +39,6 @@ public class TopStage extends Stage {
     private GroupHorizontalInTurn group_far;
     private GroupHorizontalInTurn group_near;
     private GroupHorizontalInTurn group_road;
-    private Texture texture_bg,texture_bg1,texture_road,texture_sky;
     private TextureAtlas carAtlas;
     private TextureAtlas bgAtlas;
     private int[]carpos={720-240-100,720-240-120,720-240-180,720-240-200};
@@ -52,14 +49,18 @@ public class TopStage extends Stage {
 
     private World world;
     private Box2DDebugRenderer debugRenderer;
+    private OrthographicCamera camera;
 
+    private Body ground;
+
+    private Array<Barricade> barricades = new Array<Barricade>();
     public TopStage(MainScreen mainScreen) {
         this.mainScreen = mainScreen;
-        OrthographicCamera camera = new OrthographicCamera(CarGame.worldWidth, CarGame.worldHeight);
+        camera = new OrthographicCamera(CarGame.worldWidth, CarGame.worldHeight);
         camera.position.set(0f, 0f, 0);
         camera.zoom = 1f;
         camera.update();
-        setViewport(new FitViewport(CarGame.worldWidth,CarGame.worldHeight));
+        setViewport(new FitViewport(CarGame.worldWidth,CarGame.worldHeight,camera));
         addBackground();
         addCar();
         Touchpad.TouchpadStyle style = new Touchpad.TouchpadStyle();
@@ -68,16 +69,20 @@ public class TopStage extends Stage {
         world = new World(new Vector2(0, 0), true);
         debugRenderer = new Box2DDebugRenderer();
         addBox2d();
+        barricades.clear();
+        for (int i = 0; i < 30; i++) {
+            addBarricade();
+        }
 
     }
 
 
     private void addBackground(){
         bgAtlas = new TextureAtlas(Gdx.files.internal("images/bg.pack"));
-        group_sky = new GroupHorizontalInTurn(50);
-        group_far = new GroupHorizontalInTurn(4);
-        group_near = new GroupHorizontalInTurn(2);
-        group_road = new GroupHorizontalInTurn(2);
+        group_sky = new GroupHorizontalInTurn(50,camera);
+        group_far = new GroupHorizontalInTurn(4,camera);
+        group_near = new GroupHorizontalInTurn(2,camera);
+        group_road = new GroupHorizontalInTurn(2,camera);
         for (int i = 0; i < 8; i++) {
             String index = i+1+"";
             if(i > 5){
@@ -137,21 +142,22 @@ public class TopStage extends Stage {
     private void addBox2dBackground(){
         BodyDef bd = new BodyDef();
         bd.position.set(0, 0);
-        Body ground = world.createBody(bd);
+        bd.type = BodyDef.BodyType.KinematicBody;
+        ground = world.createBody(bd);
         EdgeShape shape = new EdgeShape();
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape=shape;
         fixtureDef.restitution=0;
         fixtureDef.density=0;
         float offset = 200;
-        shape.set(new Vector2(0-offset, 240), new Vector2(0-offset, 480));
-        ground.createFixture(fixtureDef);
+//        shape.set(new Vector2(0-offset, 240), new Vector2(0-offset, 480));
+//        ground.createFixture(fixtureDef);
         shape.set(new Vector2(0-offset, 240), new Vector2(CarGame.worldWidth+offset, 240));
         ground.createFixture(fixtureDef);
         shape.set(new Vector2(CarGame.worldWidth+offset, 480), new Vector2(0-offset, 480));
         ground.createFixture(fixtureDef);
-        shape.set(new Vector2(CarGame.worldWidth+offset, 480), new Vector2(CarGame.worldWidth+offset, 240));
-        ground.createFixture(fixtureDef);
+//        shape.set(new Vector2(CarGame.worldWidth+offset, 480), new Vector2(CarGame.worldWidth+offset, 240));
+//        ground.createFixture(fixtureDef);
         shape.dispose();
     }
     private Body getCarBox(Car car){
@@ -166,14 +172,36 @@ public class TopStage extends Stage {
         body.setFixedRotation(true);
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(car.getRect().width,car.getRect().height,new Vector2(0,0),0);
+        shape.setRadius(-0.4f);
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1/1000f;
         fixtureDef.friction = 1f;
-        fixtureDef.restitution = 0.2f;
+        fixtureDef.restitution = 0.3f;
         body.createFixture(fixtureDef);
         shape.dispose();
         return body;
+    }
+    private  void addBarricade(){
+        Barricade barricade = new Barricade(carAtlas.findRegion("barricade"));
+        addActor(barricade);
+        barricade.setZIndex(1000);
+        BodyDef bd = new BodyDef();
+        bd.type= BodyDef.BodyType.DynamicBody;
+        bd.position.set(300,300);
+        Body body = world.createBody(bd);
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(barricade.getWidth()/2,barricade.getHeight()/2,new Vector2(0,0),0);
+        shape.setRadius(-0.4f);
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = 1/10000f;
+        fixtureDef.friction = 0.1f;
+        fixtureDef.restitution = 0.5f;
+        body.createFixture(fixtureDef);
+        shape.dispose();
+        barricade.setBody(body);
+        barricades.add(barricade);
     }
     private void addBox2d(){
         addBox2dBackground();
@@ -212,11 +240,14 @@ public class TopStage extends Stage {
         super.act(delta);
         changeSpeed(player.getSpeed());
         player.update(delta);
+        for(Barricade b : barricades){
+            b.setSpeed(-player.getSpeed());
+        }
         for(Car car:others){
             CarMove(car);
             car.update(delta);
         }
-        getCamera().position.set(player.getRect().x+300,player.getRect().y,0);
+        getCamera().position.set(player.getRect().x+300,getCamera().position.y,0);
         world.step(1/60f,6,2);
     }
 
@@ -225,10 +256,7 @@ public class TopStage extends Stage {
         group_far.setLength((int)speed*10);
         group_near.setLength((int)speed*10);
         group_road.setLength((int)speed*10);
-        group_sky.setLength((int)speed*10);
-        group_far.setLength((int)speed*10);
-        group_near.setLength((int)speed*10);
-        group_road.setLength((int)speed*10);
+        ground.setLinearVelocity(new Vector2(speed,0));
     }
     private void CarMove(Car car){
         if(car.getBody() != null){
@@ -251,10 +279,6 @@ public class TopStage extends Stage {
     @Override
     public void dispose() {
         super.dispose();
-        texture_bg.dispose();
-        texture_bg1.dispose();
-        texture_road.dispose();
-        texture_sky.dispose();
         carAtlas.dispose();
         bgAtlas.dispose();
     }
